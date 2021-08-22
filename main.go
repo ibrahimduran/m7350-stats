@@ -38,6 +38,9 @@ func onReady() {
 	systray.SetTitle("M7350 Stats")
 	systray.SetTooltip("M7350 Stats")
 
+	mOperator := systray.AddMenuItem(STATUS_DEFAULT_TEXT, "Operator name")
+	mOperator.Disable()
+
 	mQuitOrig := systray.AddMenuItem("Quit", "Quit the whole app")
 	go func() {
 		<-mQuitOrig.ClickedCh
@@ -46,7 +49,7 @@ func onReady() {
 
 	go func() {
 		formatStatusText := func() string {
-			return strings.Split(PrettyFormatDataSize(dev.Stats.Wan.DailyStatisticsBytes, 1), " ")[0]
+			return strings.Split(PrettyFormatDataSize(dev.Stats.Wan.DailyStatisticsBytes, 1, 0), " ")[0]
 		}
 
 		for {
@@ -69,12 +72,14 @@ func onReady() {
 				err := dev.FetchStats()
 
 				if err == nil {
+					mOperator.SetTitle(dev.Stats.Wan.OperatorName)
+
 					tooltip := fmt.Sprintf(
-						"%s\nDaily: %s\nTotal: %s\n%s",
-						dev.Stats.Wan.OperatorName,
-						PrettyFormatDataSize(dev.Stats.Wan.TotalStatisticsBytes, 3),
-						PrettyFormatDataSize(dev.Stats.Wan.DailyStatisticsBytes, 3),
-						time.Now().Format("15:04:05"),
+						"↑ %s  ↓ %s\nDaily: %s\nTotal: %s",
+						PrettyFormatDataSize(dev.Stats.Wan.TxSpeedBytes, 2, 1),
+						PrettyFormatDataSize(dev.Stats.Wan.RxSpeedBytes, 2, 1),
+						PrettyFormatDataSize(dev.Stats.Wan.TotalStatisticsBytes, 3, 0),
+						PrettyFormatDataSize(dev.Stats.Wan.DailyStatisticsBytes, 3, 0),
 					)
 
 					statusColor = STATUS_COLOR_CONNECTED
